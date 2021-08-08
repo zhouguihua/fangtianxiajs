@@ -1,0 +1,37 @@
+#!/user/bin/env python
+# -*- coding:utf-8 -*-
+# 作者：周桂华
+# 开发时间: 2021/8/8 13:04
+
+
+import requests
+import execjs
+from settings import FTX_PASSWD, FTX_USERNAME
+
+
+form_data = {
+    # 手机号
+    "uid": "",
+    # RSA加密
+    "pwd": "",
+    "Service": "soufun-passport-web",
+    "AutoLogin": "1"
+}
+
+
+def encrypt_str(pwd):
+    with open("fangtianxia.js", "r") as f:
+        ctx = execjs.compile(f.read())
+    password = ctx.eval(f"encryptedString(key_to_encode, '{pwd}')")
+    return password
+
+
+# 通过Session类新建一个会话
+session = requests.Session()
+form_data.update({"uid": FTX_USERNAME, "pwd": encrypt_str(FTX_PASSWD)})
+print(form_data)
+resp = session.post("https://passport.fang.com/login.api", data=form_data, headers={
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "Referer": "https://passport.fang.com/?backurl=https://suzhou.fang.com/"
+})
+print(resp.status_code, resp.text)
